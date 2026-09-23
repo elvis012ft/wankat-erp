@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>WANKAT ERP – Soluciones de Empaque</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f5f7f8;--panel:#fff;--ink:#152126;--muted:#6b7b83;--side:#10272a;--side2:#16383b;--accent:#0f9f8f;--line:#dfe7ea;--danger:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit}.hidden{display:none!important}.app{display:flex;min-height:100vh}.sidebar{width:250px;background:var(--side);color:#dce7e8;padding:22px 14px;position:fixed;inset:0 auto 0 0;overflow:auto}.brand{font-weight:800;font-size:20px;margin:0 10px 6px}.brand small{display:block;font-size:11px;font-weight:500;color:#89a5a8;margin-top:4px}.nav{margin-top:18px}.nav button{display:block;width:100%;text-align:left;border:0;background:transparent;color:#dce7e8;padding:10px 12px;border-radius:8px;cursor:pointer;margin:2px 0}.nav button:hover,.nav button.active{background:var(--side2);color:#fff}.main{margin-left:250px;width:calc(100% - 250px)}.topbar{height:64px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:4}.content{padding:24px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.03)}.kpi b{font-size:25px;display:block;margin-top:8px}.muted{color:var(--muted)}h1{font-size:24px;margin:0 0 18px}h2{font-size:18px}.toolbar{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}.btn{border:0;border-radius:8px;padding:9px 13px;cursor:pointer;background:#e9eff0;color:#183034}.btn.primary{background:var(--accent);color:#fff}.btn.danger{background:#fbe9e7;color:var(--danger)}.table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}.table th,.table td{padding:11px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}.table th{background:#f7fafb;color:#50646c}.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;background:#e9f7f5;color:#087a6c}.modal{position:fixed;inset:0;background:rgba(9,22,25,.42);display:flex;align-items:center;justify-content:center;z-index:20}.modalbox{background:#fff;width:min(640px,92vw);border-radius:14px;padding:20px;max-height:88vh;overflow:auto}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;font-size:12px;color:#5e7077;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #cfdadd;border-radius:8px}.loginwrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#0d2427,#174a4e)}.login{width:min(440px,92vw);background:#fff;padding:28px;border-radius:16px}.login h1{margin-bottom:6px}.login input{width:100%;padding:12px;border:1px solid #d4dfe1;border-radius:8px;margin:6px 0 12px}.notice{padding:10px 12px;border-radius:8px;background:#eef8f6;color:#166b62;font-size:13px;margin-bottom:12px}.empty{padding:24px;text-align:center;color:#7b8b91}.section{display:none}.section.active{display:block}@media(max-width:900px){.sidebar{width:210px}.main{margin-left:210px;width:calc(100% - 210px)}.grid{grid-template-columns:1fr 1fr}}@media(max-width:700px){.sidebar{position:static;width:100%;height:auto}.app{display:block}.main{margin:0;width:100%}.grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="loginView" class="loginwrap">
+  <div class="login">
+    <h1>WANKAT ERP</h1>
+    <div class="muted" style="margin-bottom:18px">Soluciones de Empaque</div>
+    <div class="notice">Acceso privado. La primera cuenta creada puede reclamar la administración inicial.</div>
+    <label>Correo electrónico</label><input id="email" type="email" placeholder="correo@empresa.com"/>
+    <label>Contraseña</label><input id="password" type="password" placeholder="••••••••"/>
+    <button class="btn primary" style="width:100%" onclick="signIn()">Entrar</button>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="signUp()">Crear primera cuenta</button>
+    <div id="authMsg" class="muted" style="margin-top:12px;font-size:13px"></div>
+  </div>
+</div>
+
+<div id="appView" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand">WANKAT ERP<small>Soluciones de Empaque</small></div>
+    <div class="nav" id="nav">
+      <button class="active" data-sec="dashboard">Dashboard</button>
+      <button data-sec="pos">Caja / POS</button>
+      <button data-sec="clientes">Clientes</button>
+      <button data-sec="ventas">Ventas / Facturas</button>
+      <button data-sec="cobros">Cobros</button>
+      <button data-sec="productos">Productos</button>
+      <button data-sec="inventario">Inventario</button>
+      <button data-sec="compras">Compras</button>
+      <button data-sec="proveedores">Proveedores</button>
+      <button data-sec="contabilidad">Contabilidad</button>
+      <button data-sec="reportes">Reportes</button>
+      <button data-sec="crm">CRM</button>
+      <button data-sec="nomina">Nómina</button>
+      <button data-sec="usuarios">Usuarios y Roles</button>
+      <button data-sec="configuracion">Configuración</button>
+      <button data-sec="auditoria">Auditoría</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><div id="companyName">WANKAT Soluciones de Empaque</div><div><span id="userEmail" class="muted"></span> <button class="btn" onclick="signOut()">Salir</button></div></div>
+    <div class="content">
+      <section id="dashboard" class="section active"><h1>Dashboard ejecutivo</h1><div id="kpis" class="grid"></div><div class="card" style="margin-top:14px"><h2>Resumen</h2><div id="dashSummary" class="muted">Cargando...</div></div></section>
+
+      <section id="clientes" class="section"><div class="toolbar"><h1>Clientes</h1><button class="btn primary" onclick="openCustomer()">Nuevo cliente</button></div><div id="customersTable"></div></section>
+      <section id="productos" class="section"><div class="toolbar"><h1>Productos</h1><button class="btn primary" onclick="openProduct()">Nuevo producto</button></div><div id="productsTable"></div></section>
+      <section id="inventario" class="section"><div class="toolbar"><h1>Inventario</h1><button class="btn primary" onclick="openMovement()">Registrar movimiento</button></div><div id="inventoryTable"></div></section>
+      <section id="ventas" class="section"><div class="toolbar"><h1>Ventas / Facturas</h1><button class="btn primary" onclick="openInvoice()">Nueva factura</button></div><div id="invoicesTable"></div></section>
+      <section id="cobros" class="section"><h1>Cobros</h1><div id="paymentsTable"></div></section>
+      <section id="pos" class="section"><h1>Caja / POS</h1><div class="card"><p>Primera versión operativa: apertura/cierre y venta rápida se conectarán sobre las tablas persistentes ya creadas.</p><button class="btn primary" onclick="openCash()">Abrir caja</button><div id="cashInfo" class="muted" style="margin-top:12px"></div></div></section>
+      <section id="compras" class="section"><h1>Compras</h1><div class="card">Módulo inicial navegable con estructura persistente preparada.</div></section>
+      <section id="proveedores" class="section"><h1>Proveedores</h1><div id="suppliersTable" class="card">Módulo inicial preparado.</div></section>
+      <section id="contabilidad" class="section"><h1>Contabilidad</h1><div class="card">Plan de cuentas, asientos y libro diario preparados en base de datos.</div></section>
+      <section id="reportes" class="section"><h1>Reportes</h1><div class="grid"><div class="card">Ventas</div><div class="card">Compras</div><div class="card">Cartera</div><div class="card">Inventario</div></div></section>
+      <section id="crm" class="section"><h1>CRM</h1><div class="card">Leads y oportunidades: estructura inicial persistente.</div></section>
+      <section id="nomina" class="section"><h1>Nómina</h1><div class="card">Empleados y estructura inicial de nómina.</div></section>
+      <section id="usuarios" class="section"><h1>Usuarios y Roles</h1><div class="card">Roles: Administrador, Caja, Ventas, Inventario, Contabilidad y Supervisor. Modelo de permisos y overrides HEREDAR/PERMITIR/DENEGAR activo en base.</div></section>
+      <section id="configuracion" class="section"><h1>Configuración</h1><div class="card"><b>Facturación electrónica</b><p><span class="badge">Integración fiscal pendiente</span></p><p class="muted">No existe conexión simulada con DGII ni otra autoridad tributaria.</p></div></section>
+      <section id="auditoria" class="section"><h1>Auditoría</h1><div id="auditTable"></div></section>
+    </div>
+  </main>
+</div>
+<div id="modalRoot"></div>
+
+<script>
+const SUPABASE_URL='https://olwtyfxdrvamjtpwtpen.supabase.co';
+const SUPABASE_KEY='sb_publishable_-avQvIns21IOnSvsPQNXkA_biKg0ADf';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let companyId=null, currentUser=null, cache={products:[],customers:[]};
+
+function money(v){return new Intl.NumberFormat('es-DO',{style:'currency',currency:'DOP'}).format(Number(v||0))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function modal(html){document.getElementById('modalRoot').innerHTML='<div class="modal" onclick="if(event.target===this)closeModal()"><div class="modalbox">'+html+'</div></div>'}
+function closeModal(){document.getElementById('modalRoot').innerHTML=''}
+
+async function signUp(){
+ const email=document.getElementById('email').value.trim(), password=document.getElementById('password').value;
+ const {data,error}=await sb.auth.signUp({email,password});
+ document.getElementById('authMsg').textContent=error?error.message:(data.session?'Cuenta creada. Entrando...':'Cuenta creada. Revisa tu correo si la confirmación está habilitada.');
+ if(data.session) await enterApp(data.session.user);
+}
+async function signIn(){
+ const email=document.getElementById('email').value.trim(), password=document.getElementById('password').value;
+ const {data,error}=await sb.auth.signInWithPassword({email,password});
+ document.getElementById('authMsg').textContent=error?error.message:'';
+ if(data.user) await enterApp(data.user);
+}
+async function signOut(){await sb.auth.signOut();location.reload()}
+
+async function enterApp(user){
+ currentUser=user;
+ document.getElementById('userEmail').textContent=user.email||'';
+ let {data:mem}=await sb.from('company_memberships').select('company_id,role').eq('user_id',user.id).eq('active',true).limit(1);
+ if(!mem||!mem.length){
+   const {error}=await sb.rpc('claim_initial_wankat_admin');
+   if(error){
+     document.getElementById('authMsg').textContent='Tu cuenta no tiene acceso a una empresa. Un administrador debe asignarte.';
+     await sb.auth.signOut();return;
+   }
+   ({data:mem}=await sb.from('company_memberships').select('company_id,role').eq('user_id',user.id).eq('active',true).limit(1));
+ }
+ companyId=mem[0].company_id;
+ document.getElementById('loginView').classList.add('hidden');
+ document.getElementById('appView').classList.remove('hidden');
+ await refreshAll();
+}
+async function refreshAll(){await Promise.all([loadDashboard(),loadCustomers(),loadProducts(),loadInventory(),loadInvoices(),loadPayments(),loadAudit()])}
+
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=async()=>{
+ document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+ document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(b.dataset.sec).classList.add('active');
+});
+
+async function loadDashboard(){
+ const [{data:inv},{data:pay},{data:stock},{data:purch}]=await Promise.all([
+   sb.from('invoices').select('total,balance,status').eq('company_id',companyId),
+   sb.from('payments').select('amount').eq('company_id',companyId),
+   sb.from('inventory_stock').select('*').eq('company_id',companyId),
+   sb.from('purchases').select('total').eq('company_id',companyId)
+ ]);
+ const sales=(inv||[]).filter(x=>x.status!=='void').reduce((a,x)=>a+Number(x.total),0);
+ const ar=(inv||[]).filter(x=>x.status!=='void').reduce((a,x)=>a+Number(x.balance),0);
+ const collected=(pay||[]).reduce((a,x)=>a+Number(x.amount),0);
+ const low=(stock||[]).filter(x=>Number(x.stock)<=Number(x.min_stock)).length;
+ const buys=(purch||[]).reduce((a,x)=>a+Number(x.total),0);
+ document.getElementById('kpis').innerHTML=[
+ ['Ventas',money(sales)],['Cobros',money(collected)],['CxC',money(ar)],['Stock bajo',low],['Compras',money(buys)],['Caja','Ver POS']
+ ].map(x=>'<div class="card kpi"><span class="muted">'+x[0]+'</span><b>'+x[1]+'</b></div>').join('');
+ document.getElementById('dashSummary').textContent='Datos persistentes de la empresa activa. Los registros demo se identifican explícitamente.';
+}
+async function loadCustomers(){
+ const {data,error}=await sb.from('customers').select('*').eq('company_id',companyId).order('created_at',{ascending:false});
+ cache.customers=data||[];
+ document.getElementById('customersTable').innerHTML=error?error.message:table(['Nombre','RNC/ID','Email','Teléfono','Estado'],(data||[]).map(x=>[esc(x.legal_name),esc(x.tax_id),esc(x.email),esc(x.phone),'<span class="badge">'+x.status+'</span>']));
+}
+async function loadProducts(){
+ const {data,error}=await sb.from('products').select('*').eq('company_id',companyId).order('created_at',{ascending:false});
+ cache.products=data||[];
+ document.getElementById('productsTable').innerHTML=error?error.message:table(['SKU','Producto','Precio','Costo','Mínimo','Estado'],(data||[]).map(x=>[esc(x.sku),esc(x.name),money(x.sale_price),money(x.cost),x.min_stock,'<span class="badge">'+x.status+'</span>']));
+}
+async function loadInventory(){
+ const {data,error}=await sb.from('inventory_stock').select('*').eq('company_id',companyId).order('name');
+ document.getElementById('inventoryTable').innerHTML=error?error.message:table(['SKU','Producto','Existencia','Mínimo','Alerta'],(data||[]).map(x=>[esc(x.sku),esc(x.name),x.stock,x.min_stock,Number(x.stock)<=Number(x.min_stock)?'<span class="badge">Bajo stock</span>':'OK']));
+}
+async function loadInvoices(){
+ const {data,error}=await sb.from('invoices').select('*,customers(legal_name)').eq('company_id',companyId).order('created_at',{ascending:false});
+ document.getElementById('invoicesTable').innerHTML=error?error.message:table(['Número','Cliente','Fecha','Total','Saldo','Estado'],(data||[]).map(x=>[esc(x.number),esc(x.customers?.legal_name||'Consumidor final'),x.issue_date,money(x.total),money(x.balance),'<span class="badge">'+x.status+'</span>']));
+}
+async function loadPayments(){
+ const {data,error}=await sb.from('payments').select('*,invoices(number)').eq('company_id',companyId).order('paid_at',{ascending:false});
+ document.getElementById('paymentsTable').innerHTML=error?error.message:table(['Factura','Fecha','Monto','Referencia'],(data||[]).map(x=>[esc(x.invoices?.number),new Date(x.paid_at).toLocaleString(),money(x.amount),esc(x.reference)]));
+}
+async function loadAudit(){
+ const {data}=await sb.from('audit_logs').select('*').eq('company_id',companyId).order('created_at',{ascending:false}).limit(50);
+ document.getElementById('auditTable').innerHTML=table(['Fecha','Acción','Entidad'],(data||[]).map(x=>[new Date(x.created_at).toLocaleString(),esc(x.action),esc(x.entity)]));
+}
+function table(head,rows){return '<table class="table"><thead><tr>'+head.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+(rows.length?rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+head.length+'" class="empty">Sin registros</td></tr>')+'</tbody></table>'}
+
+function openCustomer(){modal('<h2>Nuevo cliente</h2><div class="formgrid"><div class="field"><label>Nombre / razón social</label><input id="c_name"></div><div class="field"><label>Identificación fiscal</label><input id="c_tax"></div><div class="field"><label>Email</label><input id="c_email"></div><div class="field"><label>Teléfono</label><input id="c_phone"></div><div class="field" style="grid-column:1/-1"><label>Dirección</label><input id="c_address"></div></div><div style="margin-top:16px;text-align:right"><button class="btn" onclick="closeModal()">Cancelar</button> <button class="btn primary" onclick="saveCustomer()">Guardar</button></div>')}
+async function saveCustomer(){
+ const row={company_id:companyId,legal_name:c_name.value,tax_id:c_tax.value,email:c_email.value,phone:c_phone.value,address:c_address.value,created_by:currentUser.id,updated_by:currentUser.id};
+ const {error}=await sb.from('customers').insert(row);if(error)return alert(error.message);closeModal();await loadCustomers();await loadDashboard();
+}
+function openProduct(){modal('<h2>Nuevo producto</h2><div class="formgrid"><div class="field"><label>SKU</label><input id="p_sku"></div><div class="field"><label>Nombre</label><input id="p_name"></div><div class="field"><label>Precio</label><input id="p_price" type="number" step="0.01"></div><div class="field"><label>Costo</label><input id="p_cost" type="number" step="0.01"></div><div class="field"><label>Stock mínimo</label><input id="p_min" type="number" step="0.01" value="0"></div></div><div style="margin-top:16px;text-align:right"><button class="btn" onclick="closeModal()">Cancelar</button> <button class="btn primary" onclick="saveProduct()">Guardar</button></div>')}
+async function saveProduct(){
+ const row={company_id:companyId,sku:p_sku.value,name:p_name.value,sale_price:Number(p_price.value||0),cost:Number(p_cost.value||0),min_stock:Number(p_min.value||0),created_by:currentUser.id,updated_by:currentUser.id};
+ const {error}=await sb.from('products').insert(row);if(error)return alert(error.message);closeModal();await loadProducts();await loadInventory();
+}
+function openMovement(){
+ const opts=cache.products.map(x=>'<option value="'+x.id+'">'+esc(x.sku+' - '+x.name)+'</option>').join('');
+ modal('<h2>Movimiento de inventario</h2><div class="field"><label>Producto</label><select id="m_prod">'+opts+'</select></div><div class="formgrid"><div class="field"><label>Tipo</label><select id="m_type"><option value="opening">Inicial</option><option value="adjustment_in">Entrada</option><option value="adjustment_out">Salida</option></select></div><div class="field"><label>Cantidad</label><input id="m_qty" type="number" step="0.01"></div></div><div style="margin-top:16px;text-align:right"><button class="btn" onclick="closeModal()">Cancelar</button> <button class="btn primary" onclick="saveMovement()">Guardar</button></div>')
+}
+async function saveMovement(){
+ const {error}=await sb.from('inventory_movements').insert({company_id:companyId,product_id:m_prod.value,movement_type:m_type.value,quantity:Number(m_qty.value),created_by:currentUser.id});
+ if(error)return alert(error.message);closeModal();await loadInventory();await loadDashboard();
+}
+function openInvoice(){
+ const cust='<option value="">Consumidor final</option>'+cache.customers.map(x=>'<option value="'+x.id+'">'+esc(x.legal_name)+'</option>').join('');
+ const prod=cache.products.map(x=>'<option value="'+x.id+'">'+esc(x.sku+' - '+x.name)+'</option>').join('');
+ modal('<h2>Nueva factura</h2><div class="formgrid"><div class="field"><label>Número</label><input id="i_num" value="FAC-'+Date.now().toString().slice(-6)+'"></div><div class="field"><label>Cliente</label><select id="i_cust">'+cust+'</select></div><div class="field"><label>Producto</label><select id="i_prod">'+prod+'</select></div><div class="field"><label>Cantidad</label><input id="i_qty" type="number" value="1" step="0.01"></div><div class="field"><label>Tipo</label><select id="i_type"><option value="cash">Contado</option><option value="credit">Crédito</option></select></div></div><div style="margin-top:16px;text-align:right"><button class="btn" onclick="closeModal()">Cancelar</button> <button class="btn primary" onclick="saveInvoice()">Emitir</button></div>')
+}
+async function saveInvoice(){
+ const p=cache.products.find(x=>x.id===i_prod.value);if(!p)return alert('Selecciona un producto');
+ const qty=Number(i_qty.value||1), subtotal=qty*Number(p.sale_price), tax=subtotal*.18,total=subtotal+tax;
+ const {data:inv,error}=await sb.from('invoices').insert({company_id:companyId,customer_id:i_cust.value||null,number:i_num.value,sale_type:i_type.value,status:i_type.value==='cash'?'issued':'issued',subtotal,tax_total:tax,total,balance:total,created_by:currentUser.id,updated_by:currentUser.id}).select().single();
+ if(error)return alert(error.message);
+ const {error:e2}=await sb.from('invoice_items').insert({invoice_id:inv.id,product_id:p.id,description:p.name,quantity:qty,unit_price:p.sale_price,tax_rate:.18,line_total:total});
+ if(e2)return alert(e2.message);
+ if(p.track_inventory) await sb.from('inventory_movements').insert({company_id:companyId,product_id:p.id,movement_type:'sale',quantity:qty,reference_type:'invoice',reference_id:inv.id,created_by:currentUser.id});
+ closeModal();await refreshAll();
+}
+async function openCash(){
+ const {data:open}=await sb.from('cash_sessions').select('*').eq('company_id',companyId).eq('status','open').limit(1);
+ if(open&&open.length){document.getElementById('cashInfo').textContent='Ya existe una caja abierta desde '+new Date(open[0].opened_at).toLocaleString();return}
+ const amount=prompt('Monto inicial de caja','0');if(amount===null)return;
+ const {error}=await sb.from('cash_sessions').insert({company_id:companyId,opened_by:currentUser.id,opening_amount:Number(amount||0)});
+ document.getElementById('cashInfo').textContent=error?error.message:'Caja abierta correctamente.';
+}
+
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session)enterApp(session.user)})();
+</script>
+</body></html>
