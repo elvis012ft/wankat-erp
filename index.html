@@ -85,8 +85,16 @@ function closeModal(){document.getElementById('modalRoot').innerHTML=''}
 
 async function signUp(){
  const email=document.getElementById('email').value.trim(), password=document.getElementById('password').value;
+ if(!email || !password){document.getElementById('authMsg').textContent='Ingresa correo y contraseña.';return}
  const {data,error}=await sb.auth.signUp({email,password});
- document.getElementById('authMsg').textContent=error?error.message:(data.session?'Cuenta creada. Entrando...':'Cuenta creada. Revisa tu correo si la confirmación está habilitada.');
+ if(error){
+   const msg=(error.message||'').toLowerCase();
+   document.getElementById('authMsg').textContent=msg.includes('already')||msg.includes('registered')
+     ? 'Esta cuenta ya está registrada. Usa el botón Entrar con el mismo correo y contraseña.'
+     : error.message;
+   return;
+ }
+ document.getElementById('authMsg').textContent=data.session?'Cuenta creada. Entrando...':'Cuenta creada. Revisa tu correo si la confirmación está habilitada y luego usa Entrar.';
  if(data.session) await enterApp(data.session.user);
 }
 async function signIn(){
